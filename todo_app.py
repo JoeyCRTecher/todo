@@ -140,10 +140,16 @@ def main():
     
     # Search functionality with magnifying glass icon
     st.sidebar.markdown("### 🔍 Quick Search")
-    search_term = st.sidebar.text_input("Search tasks", placeholder="Enter search term...", key="quick_search")
-    search_by = st.sidebar.selectbox("Search by", ["all", "topic", "description", "status"], key="search_by")
     
-    if st.sidebar.button("🔍 Search", key="search_button"):
+    # Use a form to enable Enter key functionality
+    with st.sidebar.form("search_form"):
+        search_term = st.text_input("Search tasks", placeholder="Enter search term... (Press Enter to search)", key="quick_search")
+        search_by = st.selectbox("Search by", ["all", "topic", "description", "status"], key="search_by")
+        
+        # Form submit button (can be triggered by Enter key)
+        search_submitted = st.form_submit_button("🔍 Search", use_container_width=True)
+    
+    if search_submitted:
         if search_term and search_term.strip():
             # Store search parameters in session state with different keys
             st.session_state.search_term_value = search_term
@@ -168,6 +174,14 @@ def main():
         if st.button("← Back to Tasks", key="back_button"):
             st.session_state.show_search = False
             st.rerun()
+    # Check if quick add navigation is active
+    elif hasattr(st.session_state, 'navigate_to_add') and st.session_state.navigate_to_add:
+        add_task_page()
+        # Clear navigation state after displaying add page
+        if st.button("← Back to Tasks", key="back_add_button"):
+            st.session_state.navigate_to_add = False
+            st.session_state.quick_add_task_name = ""
+            st.rerun()
     # Check if edit mode is active
     elif hasattr(st.session_state, 'edit_task_id') and st.session_state.edit_task_id:
         edit_task_page()
@@ -187,6 +201,20 @@ def main():
 
 def view_tasks_page():
     st.header("📋 Current Tasks")
+    
+    # Quick add task field
+    st.markdown("### ➕ Quick Add Task")
+    with st.form("quick_add_form"):
+        quick_task_name = st.text_input("Task name", placeholder="Enter task name and press Enter...", key="quick_add_task")
+        quick_add_submitted = st.form_submit_button("Add Task", use_container_width=True)
+        
+        if quick_add_submitted and quick_task_name.strip():
+            # Store the task name in session state and navigate to add task page
+            st.session_state.quick_add_task_name = quick_task_name.strip()
+            st.session_state.navigate_to_add = True
+            st.rerun()
+    
+    st.markdown("---")
     
     # Get all tasks
     df = get_all_tasks()
@@ -276,8 +304,11 @@ def view_tasks_page():
 def add_task_page():
     st.header("➕ Add New Task")
     
+    # Check if we have a quick add task name from session state
+    quick_task_name = st.session_state.get('quick_add_task_name', '')
+    
     with st.form("add_task_form"):
-        topic = st.text_input("Topic *", placeholder="Enter task topic")
+        topic = st.text_input("Topic *", value=quick_task_name, placeholder="Enter task topic")
         description = st.text_area("Description", placeholder="Enter task description")
         due = st.date_input("Due Date", value=None)
         status = st.selectbox("Status", ["Pending", "In Progress", "Completed", "On Hold"])
@@ -303,6 +334,11 @@ def add_task_page():
             if topic.strip():
                 add_task(topic, description, due, status, impact, tractability, uncertainty)
                 st.success("Task added successfully!")
+                # Clear quick add session state variables
+                if hasattr(st.session_state, 'quick_add_task_name'):
+                    st.session_state.quick_add_task_name = ""
+                if hasattr(st.session_state, 'navigate_to_add'):
+                    st.session_state.navigate_to_add = False
                 st.rerun()
             else:
                 st.error("Topic is required!")
