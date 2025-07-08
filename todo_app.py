@@ -170,6 +170,13 @@ def main():
         if st.button("← Back to Tasks", key="back_button"):
             st.session_state.show_search = False
             st.rerun()
+    # Check if edit mode is active
+    elif hasattr(st.session_state, 'edit_task_id') and st.session_state.edit_task_id:
+        edit_task_page()
+        # Clear edit state after editing
+        if st.button("← Back to Tasks", key="back_edit_button"):
+            st.session_state.edit_task_id = None
+            st.rerun()
     else:
         if page == "View Tasks":
             view_tasks_page()
@@ -206,6 +213,11 @@ def view_tasks_page():
                 st.write(f"**Created:** {task['created_at']}")
                 if task['updated_at'] != task['created_at']:
                     st.write(f"**Updated:** {task['updated_at']}")
+                
+                # Add edit link
+                if st.button(f"✏️ Edit Task {task['id']}", key=f"edit_{task['id']}"):
+                    st.session_state.edit_task_id = task['id']
+                    st.rerun()
     
     # Show summary statistics
     st.markdown("---")
@@ -263,17 +275,21 @@ def add_task_page():
 def edit_task_page():
     st.header("✏️ Edit Task")
     
-    # Get all tasks for selection
-    df = get_all_tasks()
-    
-    if len(df) == 0:
-        st.info("No tasks found to edit.")
-        return
-    
-    # Task selection
-    task_options = {f"{row['topic']} (ID: {row['id']})": row['id'] for _, row in df.iterrows()}
-    selected_task_label = st.selectbox("Select task to edit:", list(task_options.keys()))
-    selected_task_id = task_options[selected_task_label]
+    # Check if we have a specific task ID from session state
+    if hasattr(st.session_state, 'edit_task_id') and st.session_state.edit_task_id:
+        selected_task_id = st.session_state.edit_task_id
+    else:
+        # Get all tasks for selection
+        df = get_all_tasks()
+        
+        if len(df) == 0:
+            st.info("No tasks found to edit.")
+            return
+        
+        # Task selection
+        task_options = {f"{row['topic']} (ID: {row['id']})": row['id'] for _, row in df.iterrows()}
+        selected_task_label = st.selectbox("Select task to edit:", list(task_options.keys()))
+        selected_task_id = task_options[selected_task_label]
     
     # Get task details
     task = get_task_by_id(selected_task_id)
@@ -324,6 +340,9 @@ def edit_task_page():
                 if topic.strip():
                     update_task(selected_task_id, topic, description, due, status, impact, tractability, uncertainty)
                     st.success("Task updated successfully!")
+                    # Clear edit task ID from session state
+                    if hasattr(st.session_state, 'edit_task_id'):
+                        st.session_state.edit_task_id = None
                     st.rerun()
                 else:
                     st.error("Topic is required!")
