@@ -273,6 +273,7 @@ def view_tasks_page():
     for _, task in filtered_df.iterrows():
         status_color = get_status_color(task['status'])
         with st.expander(f"**{task['topic']}** - :{status_color}[{task['status']}] (Score: {task['score']:.2f})"):
+            # Display task details in read-only format
             col1, col2 = st.columns([2, 1])
             
             with col1:
@@ -287,11 +288,59 @@ def view_tasks_page():
                 st.write(f"**Created:** {task['created_at']}")
                 if task['updated_at'] != task['created_at']:
                     st.write(f"**Updated:** {task['updated_at']}")
+            
+            st.markdown("---")
+            
+            # Edit form directly in the expander
+            st.markdown("### ✏️ Edit Task")
+            with st.form(f"edit_task_form_{task['id']}"):
+                topic = st.text_input("Topic *", value=task['topic'], key=f"edit_topic_{task['id']}")
+                description = st.text_area("Description", value=task['description'] or "", key=f"edit_description_{task['id']}")
                 
-                # Add edit link
-                if st.button(f"✏️ Edit Task {task['id']}", key=f"edit_{task['id']}"):
-                    st.session_state.edit_task_id = task['id']
-                    st.rerun()
+                # Handle due date
+                due_date = None
+                if task['due'] is not None and str(task['due']) not in ['NaT', 'None', 'nan']:
+                    try:
+                        due_date = datetime.strptime(str(task['due']), '%Y-%m-%d').date()
+                    except:
+                        due_date = None
+                
+                due = st.date_input("Due Date", value=due_date, key=f"edit_due_{task['id']}")
+                status = st.selectbox("Status", ["Pending", "In Progress", "Completed", "On Hold"], 
+                                    index=["Pending", "In Progress", "Completed", "On Hold"].index(str(task['status'])), 
+                                    key=f"edit_status_{task['id']}")
+                
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    impact = st.slider("Impact (1-10)", 1, 10, int(task['impact']), key=f"edit_impact_{task['id']}")
+                
+                with col2:
+                    tractability = st.slider("Tractability (1-10)", 1, 10, int(task['tractability']), key=f"edit_tractability_{task['id']}")
+                
+                with col3:
+                    uncertainty = st.slider("Uncertainty (1-10)", 1, 10, int(task['uncertainty']), key=f"edit_uncertainty_{task['id']}")
+                
+                # Calculate and display score
+                score = calculate_score(impact, tractability, uncertainty)
+                st.info(f"**Calculated Score:** {score:.2f} (Impact × Tractability ÷ Uncertainty)")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    submitted = st.form_submit_button("Update Task", use_container_width=True)
+                
+                with col2:
+                    if st.form_submit_button("Cancel", use_container_width=True):
+                        st.rerun()
+                
+                if submitted:
+                    if topic and topic.strip():
+                        update_task(task['id'], topic, description, due, status, impact, tractability, uncertainty)
+                        st.success("Task updated successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Topic is required!")
     
     # Show summary statistics for filtered results
     st.markdown("---")
