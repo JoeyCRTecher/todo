@@ -70,3 +70,5 @@ logs/
 *.temp
 temp/
 tmp/ 
+
+todo.db
