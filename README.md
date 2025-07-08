@@ -104,12 +104,66 @@ todo/
 ├── todo_app.py          # Main application file
 ├── requirements.txt     # Python dependencies
 ├── README.md           # This file
-└── todo.db             # SQLite database (created automatically)
+├── todo.db             # SQLite database (created automatically)
+├── pytest.ini          # Pytest configuration
+├── run_tests.py        # Test runner script
+└── tests/              # Test directory
+    ├── __init__.py     # Makes tests a Python package
+    ├── conftest.py     # Pytest fixtures and configuration
+    ├── test_integration.py  # Integration tests
+    ├── test_database.py     # Database tests
+    └── test_calculations.py # Business logic tests
 ```
+
+## Testing
+
+This project includes a comprehensive test suite to ensure reliability and correctness.
+
+### Running Tests
+
+1. **Install test dependencies**:
+   ```bash
+   python run_tests.py install
+   ```
+
+2. **Run all tests**:
+   ```bash
+   python run_tests.py all
+   ```
+
+3. **Run specific test types**:
+   ```bash
+   python run_tests.py integration  # Integration tests
+   python run_tests.py database     # Database tests
+   python run_tests.py calculations # Business logic tests
+   ```
+
+4. **Run tests with coverage**:
+   ```bash
+   python run_tests.py coverage
+   ```
+
+### Test Structure
+
+- **Integration Tests** (`test_integration.py`): Test complete workflows and end-to-end functionality
+- **Database Tests** (`test_database.py`): Test database operations, constraints, and data integrity
+- **Calculation Tests** (`test_calculations.py`): Test the priority scoring system and business logic
+
+### Test Features
+
+- ✅ **Isolated Testing**: Uses temporary databases to avoid affecting development data
+- ✅ **Comprehensive Coverage**: Tests all major functionality including edge cases
+- ✅ **Automatic Cleanup**: Properly cleans up test data and restores original state
+- ✅ **Easy Execution**: Simple commands to run different types of tests
 
 ## Contributing
 
 Feel free to fork this project and submit pull requests for any improvements or bug fixes.
+
+**Before submitting a pull request, please ensure all tests pass:**
+```bash
+python run_tests.py all
+```
 
 ## License
 
