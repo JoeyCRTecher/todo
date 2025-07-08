@@ -197,15 +197,52 @@ def view_tasks_page():
         st.info("No tasks found. Add some tasks to get started!")
         return
     
-    # Display tasks in a nice format
-    for _, task in df.iterrows():
+    # Status filter controls
+    st.markdown("### 🔍 Filter by Status")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        show_pending = st.checkbox("Pending", value=True, key="filter_pending")
+    with col2:
+        show_in_progress = st.checkbox("In Progress", value=True, key="filter_in_progress")
+    with col3:
+        show_on_hold = st.checkbox("On Hold", value=True, key="filter_on_hold")
+    with col4:
+        show_completed = st.checkbox("Completed", value=False, key="filter_completed")
+    
+    # Filter tasks based on selected statuses
+    selected_statuses = []
+    if show_pending:
+        selected_statuses.append("Pending")
+    if show_in_progress:
+        selected_statuses.append("In Progress")
+    if show_on_hold:
+        selected_statuses.append("On Hold")
+    if show_completed:
+        selected_statuses.append("Completed")
+    
+    # Apply filter
+    if selected_statuses:
+        filtered_df = df[df['status'].isin(selected_statuses)]
+    else:
+        filtered_df = df  # Show all if no filters selected
+    
+    st.markdown("---")
+    
+    # Display filtered tasks
+    if len(filtered_df) == 0:
+        st.info("No tasks found matching the selected filters.")
+        return
+    
+    for _, task in filtered_df.iterrows():
         with st.expander(f"**{task['topic']}** - {task['status']} (Score: {task['score']:.2f})"):
             col1, col2 = st.columns([2, 1])
             
             with col1:
                 st.write(f"**Description:** {task['description']}")
-                if task['due']:
-                    st.write(f"**Due Date:** {task['due']}")
+                due_date = task['due']
+                if due_date is not None and str(due_date) not in ['NaT', 'None', 'nan']:
+                    st.write(f"**Due Date:** {due_date}")
                 st.write(f"**Impact:** {task['impact']} | **Tractability:** {task['tractability']} | **Uncertainty:** {task['uncertainty']}")
             
             with col2:
@@ -219,23 +256,23 @@ def view_tasks_page():
                     st.session_state.edit_task_id = task['id']
                     st.rerun()
     
-    # Show summary statistics
+    # Show summary statistics for filtered results
     st.markdown("---")
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("Total Tasks", len(df))
+        st.metric("Filtered Tasks", len(filtered_df))
     
     with col2:
-        pending_count = len(df[df['status'] == 'Pending'])
+        pending_count = len(filtered_df[filtered_df['status'] == 'Pending'])
         st.metric("Pending", pending_count)
     
     with col3:
-        completed_count = len(df[df['status'] == 'Completed'])
+        completed_count = len(filtered_df[filtered_df['status'] == 'Completed'])
         st.metric("Completed", completed_count)
     
     with col4:
-        avg_score = df['score'].mean()
+        avg_score = filtered_df['score'].mean()
         st.metric("Avg Score", f"{avg_score:.2f}")
 
 def add_task_page():
@@ -337,7 +374,7 @@ def edit_task_page():
                     st.rerun()
             
             if submitted:
-                if topic.strip():
+                if topic and topic.strip():
                     update_task(selected_task_id, topic, description, due, status, impact, tractability, uncertainty)
                     st.success("Task updated successfully!")
                     # Clear edit task ID from session state
@@ -402,8 +439,9 @@ def search_tasks_page():
                 
                 with col1:
                     st.write(f"**Description:** {task['description']}")
-                    if task['due']:
-                        st.write(f"**Due Date:** {task['due']}")
+                    due_date = task['due']
+                    if due_date is not None and str(due_date) not in ['NaT', 'None', 'nan']:
+                        st.write(f"**Due Date:** {due_date}")
                     st.write(f"**Impact:** {task['impact']} | **Tractability:** {task['tractability']} | **Uncertainty:** {task['uncertainty']}")
                 
                 with col2:
