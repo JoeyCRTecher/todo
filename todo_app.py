@@ -4,6 +4,16 @@ import pandas as pd
 from datetime import datetime, date
 import os
 
+def get_status_color(status):
+    """Get the color for a given status."""
+    status_colors = {
+        'Pending': 'orange',
+        'In Progress': 'green', 
+        'On Hold': 'grey',
+        'Completed': 'orange'
+    }
+    return status_colors.get(status, 'blue')  # default to blue if status not found
+
 # Page configuration
 st.set_page_config(
     page_title="Todo List Manager",
@@ -261,7 +271,8 @@ def view_tasks_page():
         return
     
     for _, task in filtered_df.iterrows():
-        with st.expander(f"**{task['topic']}** - {task['status']} (Score: {task['score']:.2f})"):
+        status_color = get_status_color(task['status'])
+        with st.expander(f"**{task['topic']}** - :{status_color}[{task['status']}] (Score: {task['score']:.2f})"):
             col1, col2 = st.columns([2, 1])
             
             with col1:
@@ -440,7 +451,8 @@ def delete_task_page():
         st.warning("⚠️ **Task to be deleted:**")
         st.write(f"**Topic:** {task[1]}")
         st.write(f"**Description:** {task[2]}")
-        st.write(f"**Status:** {task[4]}")
+        status_color = get_status_color(task[4])
+        st.write(f"**Status:** :{status_color}[{task[4]}]")
         st.write(f"**Score:** {task[8]}")
         
         if st.button("🗑️ Delete Task", type="primary"):
@@ -468,7 +480,8 @@ def search_tasks_page():
         
         # Display search results
         for _, task in results.iterrows():
-            with st.expander(f"**{task['topic']}** - {task['status']} (Score: {task['score']:.2f})"):
+            status_color = get_status_color(task['status'])
+            with st.expander(f"**{task['topic']}** - :{status_color}[{task['status']}] (Score: {task['score']:.2f})"):
                 col1, col2 = st.columns([2, 1])
                 
                 with col1:
