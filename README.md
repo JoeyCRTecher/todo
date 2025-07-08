@@ -1,3 +1,9 @@
+# Todo
+Search tasks
+Filter out tasks that are done
+Add tags
+
+
 # Todo List Manager
 
 A modern, feature-rich todo list application built with Python 3.13, Streamlit, and SQLite3. This application helps you manage tasks with priority scoring based on impact, tractability, and uncertainty.
@@ -7,6 +13,7 @@ A modern, feature-rich todo list application built with Python 3.13, Streamlit, 
 - ✅ **Add Tasks**: Create new tasks with all required fields
 - ✏️ **Edit Tasks**: Modify existing tasks
 - 🗑️ **Delete Tasks**: Remove tasks from your list
+- 🔍 **Search Tasks**: Search tasks by topic, description, or status
 - 📊 **Priority Scoring**: Automatic score calculation based on impact, tractability, and uncertainty
 - 📅 **Due Date Management**: Set and track due dates
 - 📈 **Statistics Dashboard**: View task statistics and progress
@@ -75,6 +82,17 @@ Each task includes the following fields:
 2. Select the task you want to delete
 3. Review the task details
 4. Click "Delete Task" to confirm
+
+### Searching Tasks
+1. Go to "Search Tasks" in the sidebar
+2. Enter your search term in the text field
+3. Choose what to search by:
+   - **All**: Search in topic, description, and status
+   - **Topic**: Search only in task topics
+   - **Description**: Search only in task descriptions
+   - **Status**: Search only in task status
+4. Click "Search" to find matching tasks
+5. View search results with statistics
 
 ## Priority Scoring System
 

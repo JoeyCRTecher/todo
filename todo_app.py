@@ -102,6 +102,36 @@ def get_task_by_id(task_id):
     conn.close()
     return task
 
+def search_tasks(search_term, search_by="all"):
+    """Search tasks by topic, description, or status."""
+    conn = sqlite3.connect('todo.db')
+    
+    if search_by == "all":
+        query = """
+        SELECT * FROM tasks 
+        WHERE topic LIKE ? OR description LIKE ? OR status LIKE ?
+        ORDER BY score DESC, due ASC
+        """
+        search_pattern = f"%{search_term}%"
+        df = pd.read_sql_query(query, conn, params=[search_pattern, search_pattern, search_pattern])
+    elif search_by == "topic":
+        query = "SELECT * FROM tasks WHERE topic LIKE ? ORDER BY score DESC, due ASC"
+        search_pattern = f"%{search_term}%"
+        df = pd.read_sql_query(query, conn, params=[search_pattern])
+    elif search_by == "description":
+        query = "SELECT * FROM tasks WHERE description LIKE ? ORDER BY score DESC, due ASC"
+        search_pattern = f"%{search_term}%"
+        df = pd.read_sql_query(query, conn, params=[search_pattern])
+    elif search_by == "status":
+        query = "SELECT * FROM tasks WHERE status LIKE ? ORDER BY score DESC, due ASC"
+        search_pattern = f"%{search_term}%"
+        df = pd.read_sql_query(query, conn, params=[search_pattern])
+    else:
+        df = pd.DataFrame()
+    
+    conn.close()
+    return df
+
 # Initialize database
 init_database()
 
@@ -113,7 +143,7 @@ def main():
     # Sidebar for navigation
     page = st.sidebar.selectbox(
         "Choose an action:",
-        ["View Tasks", "Add Task", "Edit Task", "Delete Task"]
+        ["View Tasks", "Add Task", "Edit Task", "Delete Task", "Search Tasks"]
     )
     
     if page == "View Tasks":
@@ -124,6 +154,8 @@ def main():
         edit_task_page()
     elif page == "Delete Task":
         delete_task_page()
+    elif page == "Search Tasks":
+        search_tasks_page()
 
 def view_tasks_page():
     st.header("📋 Current Tasks")
@@ -131,7 +163,7 @@ def view_tasks_page():
     # Get all tasks
     df = get_all_tasks()
     
-    if df.empty:
+    if len(df) == 0:
         st.info("No tasks found. Add some tasks to get started!")
         return
     
@@ -211,7 +243,7 @@ def edit_task_page():
     # Get all tasks for selection
     df = get_all_tasks()
     
-    if df.empty:
+    if len(df) == 0:
         st.info("No tasks found to edit.")
         return
     
@@ -279,7 +311,7 @@ def delete_task_page():
     # Get all tasks for selection
     df = get_all_tasks()
     
-    if df.empty:
+    if len(df) == 0:
         st.info("No tasks found to delete.")
         return
     
@@ -302,6 +334,66 @@ def delete_task_page():
             delete_task(selected_task_id)
             st.success("Task deleted successfully!")
             st.rerun()
+
+def search_tasks_page():
+    st.header("🔍 Search Tasks")
+    
+    # Search interface
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        search_term = st.text_input("Enter search term", placeholder="Enter topic, description, or status")
+    
+    with col2:
+        search_by = st.selectbox("Search by", ["all", "topic", "description", "status"])
+    
+    # Search button
+    if st.button("🔍 Search", type="primary"):
+        if search_term and search_term.strip():
+            results = search_tasks(search_term, search_by)
+            
+            if len(results) == 0:
+                st.info("No tasks found matching the search criteria.")
+            else:
+                st.success(f"Found {len(results)} task(s) matching your search.")
+                
+                # Display search results
+                for _, task in results.iterrows():
+                    with st.expander(f"**{task['topic']}** - {task['status']} (Score: {task['score']:.2f})"):
+                        col1, col2 = st.columns([2, 1])
+                        
+                        with col1:
+                            st.write(f"**Description:** {task['description']}")
+                            if task['due']:
+                                st.write(f"**Due Date:** {task['due']}")
+                            st.write(f"**Impact:** {task['impact']} | **Tractability:** {task['tractability']} | **Uncertainty:** {task['uncertainty']}")
+                        
+                        with col2:
+                            st.write(f"**ID:** {task['id']}")
+                            st.write(f"**Created:** {task['created_at']}")
+                            if task['updated_at'] != task['created_at']:
+                                st.write(f"**Updated:** {task['updated_at']}")
+                
+                # Show search result statistics
+                st.markdown("---")
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    st.metric("Search Results", len(results))
+                
+                with col2:
+                    pending_count = len(results[results['status'] == 'Pending'])
+                    st.metric("Pending", pending_count)
+                
+                with col3:
+                    completed_count = len(results[results['status'] == 'Completed'])
+                    st.metric("Completed", completed_count)
+                
+                with col4:
+                    avg_score = results['score'].mean()
+                    st.metric("Avg Score", f"{avg_score:.2f}")
+        else:
+            st.warning("Please enter a search term.")
 
 if __name__ == "__main__":
     main() 
