@@ -140,22 +140,45 @@ def main():
     st.title("📋 Todo List Manager")
     st.markdown("---")
     
+    # Search functionality with magnifying glass icon
+    st.sidebar.markdown("### 🔍 Quick Search")
+    search_term = st.sidebar.text_input("Search tasks", placeholder="Enter search term...", key="quick_search")
+    search_by = st.sidebar.selectbox("Search by", ["all", "topic", "description", "status"], key="search_by")
+    
+    if st.sidebar.button("🔍 Search", key="search_button"):
+        if search_term and search_term.strip():
+            # Store search parameters in session state with different keys
+            st.session_state.search_term_value = search_term
+            st.session_state.search_by_value = search_by
+            st.session_state.show_search = True
+            st.rerun()
+        else:
+            st.sidebar.warning("Please enter a search term.")
+    
+    st.sidebar.markdown("---")
+    
     # Sidebar for navigation
     page = st.sidebar.selectbox(
         "Choose an action:",
-        ["View Tasks", "Add Task", "Edit Task", "Delete Task", "Search Tasks"]
+        ["View Tasks", "Add Task", "Edit Task", "Delete Task"]
     )
     
-    if page == "View Tasks":
-        view_tasks_page()
-    elif page == "Add Task":
-        add_task_page()
-    elif page == "Edit Task":
-        edit_task_page()
-    elif page == "Delete Task":
-        delete_task_page()
-    elif page == "Search Tasks":
+    # Check if search is active
+    if hasattr(st.session_state, 'show_search') and st.session_state.show_search:
         search_tasks_page()
+        # Clear search state after displaying results
+        if st.button("← Back to Tasks", key="back_button"):
+            st.session_state.show_search = False
+            st.rerun()
+    else:
+        if page == "View Tasks":
+            view_tasks_page()
+        elif page == "Add Task":
+            add_task_page()
+        elif page == "Edit Task":
+            edit_task_page()
+        elif page == "Delete Task":
+            delete_task_page()
 
 def view_tasks_page():
     st.header("📋 Current Tasks")
@@ -336,64 +359,58 @@ def delete_task_page():
             st.rerun()
 
 def search_tasks_page():
-    st.header("🔍 Search Tasks")
+    st.header("🔍 Search Results")
     
-    # Search interface
-    col1, col2 = st.columns([3, 1])
+    # Get search parameters from session state
+    search_term = st.session_state.get('search_term_value', '')
+    search_by = st.session_state.get('search_by_value', 'all')
     
-    with col1:
-        search_term = st.text_input("Enter search term", placeholder="Enter topic, description, or status")
+    # Display search criteria
+    st.info(f"Searching for: **{search_term}** in **{search_by}**")
     
-    with col2:
-        search_by = st.selectbox("Search by", ["all", "topic", "description", "status"])
+    # Perform search
+    results = search_tasks(search_term, search_by)
     
-    # Search button
-    if st.button("🔍 Search", type="primary"):
-        if search_term and search_term.strip():
-            results = search_tasks(search_term, search_by)
-            
-            if len(results) == 0:
-                st.info("No tasks found matching the search criteria.")
-            else:
-                st.success(f"Found {len(results)} task(s) matching your search.")
-                
-                # Display search results
-                for _, task in results.iterrows():
-                    with st.expander(f"**{task['topic']}** - {task['status']} (Score: {task['score']:.2f})"):
-                        col1, col2 = st.columns([2, 1])
-                        
-                        with col1:
-                            st.write(f"**Description:** {task['description']}")
-                            if task['due']:
-                                st.write(f"**Due Date:** {task['due']}")
-                            st.write(f"**Impact:** {task['impact']} | **Tractability:** {task['tractability']} | **Uncertainty:** {task['uncertainty']}")
-                        
-                        with col2:
-                            st.write(f"**ID:** {task['id']}")
-                            st.write(f"**Created:** {task['created_at']}")
-                            if task['updated_at'] != task['created_at']:
-                                st.write(f"**Updated:** {task['updated_at']}")
-                
-                # Show search result statistics
-                st.markdown("---")
-                col1, col2, col3, col4 = st.columns(4)
+    if len(results) == 0:
+        st.info("No tasks found matching the search criteria.")
+    else:
+        st.success(f"Found {len(results)} task(s) matching your search.")
+        
+        # Display search results
+        for _, task in results.iterrows():
+            with st.expander(f"**{task['topic']}** - {task['status']} (Score: {task['score']:.2f})"):
+                col1, col2 = st.columns([2, 1])
                 
                 with col1:
-                    st.metric("Search Results", len(results))
+                    st.write(f"**Description:** {task['description']}")
+                    if task['due']:
+                        st.write(f"**Due Date:** {task['due']}")
+                    st.write(f"**Impact:** {task['impact']} | **Tractability:** {task['tractability']} | **Uncertainty:** {task['uncertainty']}")
                 
                 with col2:
-                    pending_count = len(results[results['status'] == 'Pending'])
-                    st.metric("Pending", pending_count)
-                
-                with col3:
-                    completed_count = len(results[results['status'] == 'Completed'])
-                    st.metric("Completed", completed_count)
-                
-                with col4:
-                    avg_score = results['score'].mean()
-                    st.metric("Avg Score", f"{avg_score:.2f}")
-        else:
-            st.warning("Please enter a search term.")
+                    st.write(f"**ID:** {task['id']}")
+                    st.write(f"**Created:** {task['created_at']}")
+                    if task['updated_at'] != task['created_at']:
+                        st.write(f"**Updated:** {task['updated_at']}")
+        
+        # Show search result statistics
+        st.markdown("---")
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("Search Results", len(results))
+        
+        with col2:
+            pending_count = len(results[results['status'] == 'Pending'])
+            st.metric("Pending", pending_count)
+        
+        with col3:
+            completed_count = len(results[results['status'] == 'Completed'])
+            st.metric("Completed", completed_count)
+        
+        with col4:
+            avg_score = results['score'].mean()
+            st.metric("Avg Score", f"{avg_score:.2f}")
 
 if __name__ == "__main__":
     main() 

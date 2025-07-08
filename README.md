@@ -84,15 +84,16 @@ Each task includes the following fields:
 4. Click "Delete Task" to confirm
 
 ### Searching Tasks
-1. Go to "Search Tasks" in the sidebar
+1. Use the **🔍 Quick Search** section in the sidebar
 2. Enter your search term in the text field
 3. Choose what to search by:
    - **All**: Search in topic, description, and status
    - **Topic**: Search only in task topics
    - **Description**: Search only in task descriptions
    - **Status**: Search only in task status
-4. Click "Search" to find matching tasks
+4. Click the **🔍 Search** button to find matching tasks
 5. View search results with statistics
+6. Click "← Back to Tasks" to return to the main interface
 
 ## Priority Scoring System
 
