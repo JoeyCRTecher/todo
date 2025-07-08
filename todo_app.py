@@ -137,8 +137,6 @@ init_database()
 
 # Main app
 def main():
-    st.title("📋 Todo List Manager")
-    st.markdown("---")
     
     # Search functionality with magnifying glass icon
     st.sidebar.markdown("### 🔍 Quick Search")
