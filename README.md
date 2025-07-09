@@ -1,6 +1,5 @@
 # Todo
-Search tasks
-Filter out tasks that are done
+Filter out old tasks
 Add tags
 
 
@@ -17,7 +16,9 @@ A modern, feature-rich todo list application built with Python 3.13, Streamlit, 
 - 📊 **Priority Scoring**: Automatic score calculation based on impact, tractability, and uncertainty
 - 📅 **Due Date Management**: Set and track due dates
 - 📈 **Statistics Dashboard**: View task statistics and progress
-- 🔄 **Status Tracking**: Track task status (Pending, In Progress, Completed, On Hold)
+- 🔄 **Status Tracking**: Track task status (Pending, In Progress, Completed, On Hold, Expired)
+- ⏰ **Automatic Expiration**: Tasks older than 90 days are automatically marked as expired
+- 🔍 **Expired Task Filtering**: Toggle visibility of expired tasks (hidden by default)
 
 ## Task Fields
 
@@ -27,7 +28,7 @@ Each task includes the following fields:
 - **Topic**: Task title/name (required)
 - **Description**: Detailed task description
 - **Due**: Due date for the task
-- **Status**: Current status (Pending, In Progress, Completed, On Hold)
+- **Status**: Current status (Pending, In Progress, Completed, On Hold, Expired)
 - **Impact**: Importance of the task (1-10 scale)
 - **Tractability**: How easy the task is to accomplish (1-10 scale)
 - **Uncertainty**: How uncertain we are about the task (1-10 scale)
@@ -56,6 +57,7 @@ Each task includes the following fields:
 ### Viewing Tasks
 - Navigate to "View Tasks" in the sidebar
 - Tasks are displayed in expandable sections, sorted by score and due date
+- Use the status filters to show/hide different task statuses (including expired tasks)
 - View summary statistics at the bottom
 
 ### Adding Tasks
@@ -105,6 +107,18 @@ The application uses a sophisticated scoring system to help prioritize tasks:
 - **Low Impact + Low Tractability + High Uncertainty** = Low Priority
 
 This scoring system helps you focus on tasks that are both important and achievable.
+
+## Automatic Task Expiration
+
+The application automatically manages task expiration to help you keep your task list current:
+
+- **90-Day Rule**: Tasks that are older than 90 days are automatically marked as "Expired"
+- **Smart Updates**: Only tasks that are not already "Completed" or "Expired" are affected
+- **Visual Feedback**: You'll see a notification when tasks are automatically expired
+- **Filter Control**: Expired tasks are hidden by default but can be shown using the filter toggle
+- **Manual Override**: You can manually change a task's status back from "Expired" if needed
+
+This feature helps you maintain a clean, current task list by automatically identifying tasks that may no longer be relevant.
 
 ## Database
 

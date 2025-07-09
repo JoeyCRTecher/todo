@@ -10,7 +10,8 @@ def get_status_color(status):
         'Pending': 'orange',
         'In Progress': 'green', 
         'On Hold': 'grey',
-        'Completed': 'orange'
+        'Completed': 'orange',
+        'Expired': 'red'
     }
     return status_colors.get(status, 'blue')  # default to blue if status not found
 
@@ -51,6 +52,29 @@ def calculate_score(impact, tractability, uncertainty):
     if tractability == 0 or uncertainty == 0:
         return 0.0
     return (impact * tractability) / uncertainty
+
+def check_and_update_expired_tasks():
+    """Check for tasks older than 90 days and mark them as expired."""
+    conn = sqlite3.connect('todo.db')
+    cursor = conn.cursor()
+    
+    # Calculate the date 90 days ago
+    from datetime import timedelta
+    cutoff_date = datetime.now() - timedelta(days=90)
+    
+    # Update tasks that are older than 90 days and not already expired or completed
+    cursor.execute('''
+        UPDATE tasks 
+        SET status = 'Expired', updated_at = CURRENT_TIMESTAMP
+        WHERE created_at < ? 
+        AND status NOT IN ('Expired', 'Completed')
+    ''', (cutoff_date,))
+    
+    updated_count = cursor.rowcount
+    conn.commit()
+    conn.close()
+    
+    return updated_count
 
 def get_all_tasks():
     """Retrieve all tasks from the database."""
@@ -212,6 +236,11 @@ def main():
 def view_tasks_page():
     st.header("📋 Current Tasks")
     
+    # Check for expired tasks
+    expired_count = check_and_update_expired_tasks()
+    if expired_count > 0:
+        st.info(f"📅 {expired_count} task(s) have been automatically marked as expired (older than 90 days).")
+    
     # Quick add task field
     st.markdown("### ➕ Quick Add Task")
     with st.form("quick_add_form"):
@@ -235,7 +264,7 @@ def view_tasks_page():
     
     # Status filter controls
     st.markdown("### 🔍 Filter by Status")
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
         show_pending = st.checkbox("Pending", value=True, key="filter_pending")
@@ -245,6 +274,8 @@ def view_tasks_page():
         show_on_hold = st.checkbox("On Hold", value=True, key="filter_on_hold")
     with col4:
         show_completed = st.checkbox("Completed", value=False, key="filter_completed")
+    with col5:
+        show_expired = st.checkbox("Expired", value=False, key="filter_expired")
     
     # Filter tasks based on selected statuses
     selected_statuses = []
@@ -256,6 +287,8 @@ def view_tasks_page():
         selected_statuses.append("On Hold")
     if show_completed:
         selected_statuses.append("Completed")
+    if show_expired:
+        selected_statuses.append("Expired")
     
     # Apply filter
     if selected_statuses:
@@ -306,8 +339,8 @@ def view_tasks_page():
                         due_date = None
                 
                 due = st.date_input("Due Date", value=due_date, key=f"edit_due_{task['id']}")
-                status = st.selectbox("Status", ["Pending", "In Progress", "Completed", "On Hold"], 
-                                    index=["Pending", "In Progress", "Completed", "On Hold"].index(str(task['status'])), 
+                status = st.selectbox("Status", ["Pending", "In Progress", "Completed", "On Hold", "Expired"], 
+                                    index=["Pending", "In Progress", "Completed", "On Hold", "Expired"].index(str(task['status'])), 
                                     key=f"edit_status_{task['id']}")
                 
                 col1, col2, col3 = st.columns(3)
@@ -371,7 +404,7 @@ def add_task_page():
         topic = st.text_input("Topic *", value=quick_task_name, placeholder="Enter task topic")
         description = st.text_area("Description", placeholder="Enter task description")
         due = st.date_input("Due Date", value=None)
-        status = st.selectbox("Status", ["Pending", "In Progress", "Completed", "On Hold"])
+        status = st.selectbox("Status", ["Pending", "In Progress", "Completed", "On Hold", "Expired"])
         
         col1, col2, col3 = st.columns(3)
         
@@ -439,8 +472,8 @@ def edit_task_page():
                     due_date = None
             
             due = st.date_input("Due Date", value=due_date, key="edit_due")
-            status = st.selectbox("Status", ["Pending", "In Progress", "Completed", "On Hold"], 
-                                index=["Pending", "In Progress", "Completed", "On Hold"].index(task[4]), 
+            status = st.selectbox("Status", ["Pending", "In Progress", "Completed", "On Hold", "Expired"], 
+                                index=["Pending", "In Progress", "Completed", "On Hold", "Expired"].index(task[4]), 
                                 key="edit_status")
             
             col1, col2, col3 = st.columns(3)
