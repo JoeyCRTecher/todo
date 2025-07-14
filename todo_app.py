@@ -166,6 +166,25 @@ def search_tasks(search_term, search_by="all"):
     conn.close()
     return df
 
+def get_completed_tasks_in_range(days_back):
+    """Get completed tasks within the last X days."""
+    conn = sqlite3.connect('todo.db')
+    
+    # Calculate the cutoff date
+    from datetime import timedelta
+    cutoff_date = datetime.now() - timedelta(days=days_back)
+    
+    query = """
+    SELECT * FROM tasks 
+    WHERE status = 'Completed' 
+    AND updated_at >= ?
+    ORDER BY updated_at DESC, score DESC
+    """
+    
+    df = pd.read_sql_query(query, conn, params=[cutoff_date])
+    conn.close()
+    return df
+
 # Initialize database
 init_database()
 
@@ -198,7 +217,7 @@ def main():
     # Sidebar for navigation
     page = st.sidebar.selectbox(
         "Choose an action:",
-        ["View Tasks", "Add Task", "Edit Task", "Delete Task"]
+        ["View Tasks", "Done Today", "Add Task", "Edit Task", "Delete Task"]
     )
     
     # Check if search is active
@@ -226,6 +245,8 @@ def main():
     else:
         if page == "View Tasks":
             view_tasks_page()
+        elif page == "Done Today":
+            done_today_page()
         elif page == "Add Task":
             add_task_page()
         elif page == "Edit Task":
@@ -651,6 +672,102 @@ def search_tasks_page():
         with col4:
             avg_score = results['score'].mean()
             st.metric("Avg Score", f"{avg_score:.2f}")
+
+def done_today_page():
+    st.header("✅ Done Today")
+    
+    # Slider to select number of days to look back
+    days_back = st.slider(
+        "Show completed tasks from the last X days:", 
+        min_value=1, 
+        max_value=31, 
+        value=1, 
+        help="Drag the slider to see tasks completed in the last 1-31 days"
+    )
+    
+    # Get completed tasks in the specified range
+    completed_tasks = get_completed_tasks_in_range(days_back)
+    
+    # Display the date range
+    from datetime import timedelta
+    end_date = datetime.now().date()
+    start_date = (datetime.now() - timedelta(days=days_back)).date()
+    st.info(f"📅 Showing tasks completed between **{start_date}** and **{end_date}** ({days_back} day{'s' if days_back != 1 else ''})")
+    
+    if len(completed_tasks) == 0:
+        st.info(f"No tasks completed in the last {days_back} day{'s' if days_back != 1 else ''}.")
+        return
+    
+    st.success(f"🎉 Found {len(completed_tasks)} completed task{'s' if len(completed_tasks) != 1 else ''}!")
+    
+    # Display completed tasks
+    for _, task in completed_tasks.iterrows():
+        with st.expander(f"✅ **{task['topic']}** (Score: {task['score']:.2f})"):
+            # Display task details
+            col1, col2 = st.columns([2, 1])
+            
+            with col1:
+                st.write(f"**Description:** {task['description']}")
+                due_date = task['due']
+                if due_date is not None and str(due_date) not in ['NaT', 'None', 'nan']:
+                    st.write(f"**Due Date:** {due_date}")
+                st.write(f"**Impact:** {task['impact']} | **Tractability:** {task['tractability']} | **Uncertainty:** {task['uncertainty']}")
+            
+            with col2:
+                st.write(f"**ID:** {task['id']}")
+                st.write(f"**Created:** {task['created_at']}")
+                st.write(f"**Completed:** {task['updated_at']}")
+            
+            # Show completion time if different from creation time
+            if task['updated_at'] != task['created_at']:
+                st.info(f"⏱️ **Task completed on:** {task['updated_at']}")
+    
+    # Show summary statistics
+    st.markdown("---")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Completed Tasks", len(completed_tasks))
+    
+    with col2:
+        total_impact = completed_tasks['impact'].sum()
+        st.metric("Total Impact", total_impact)
+    
+    with col3:
+        avg_score = completed_tasks['score'].mean()
+        st.metric("Avg Score", f"{avg_score:.2f}")
+    
+    with col4:
+        # Calculate average completion time (if we had that data)
+        st.metric("Days Back", days_back)
+    
+    # Additional insights
+    st.markdown("---")
+    st.markdown("### 📊 Completion Insights")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # High impact tasks completed
+        high_impact_tasks = completed_tasks[completed_tasks['impact'] >= 7]
+        st.metric("High Impact Tasks (7+)", len(high_impact_tasks))
+        
+        # High score tasks completed
+        high_score_tasks = completed_tasks[completed_tasks['score'] >= 5.0]
+        st.metric("High Score Tasks (5+)", len(high_score_tasks))
+    
+    with col2:
+        # Most recent completion
+        if len(completed_tasks) > 0:
+            most_recent = completed_tasks.iloc[0]  # Already sorted by updated_at DESC
+            st.write(f"**Most Recent:** {most_recent['topic']}")
+            st.write(f"**Completed:** {most_recent['updated_at']}")
+        
+        # Oldest completion in range
+        if len(completed_tasks) > 0:
+            oldest = completed_tasks.iloc[-1]  # Last in the sorted list
+            st.write(f"**Oldest in Range:** {oldest['topic']}")
+            st.write(f"**Completed:** {oldest['updated_at']}")
 
 if __name__ == "__main__":
     main() 
