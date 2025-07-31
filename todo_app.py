@@ -1,8 +1,8 @@
+from datetime import datetime, timedelta
+import os
 import streamlit as st
 import sqlite3
 import pandas as pd
-from datetime import datetime, date
-import os
 
 def get_status_color(status):
     """Get the color for a given status."""
@@ -139,7 +139,7 @@ def get_task_by_id(task_id):
 def search_tasks(search_term, search_by="all"):
     """Search tasks by topic, description, or status."""
     conn = sqlite3.connect('todo.db')
-    
+    #the default behaviour
     if search_by == "all":
         query = """
         SELECT * FROM tasks 
@@ -148,6 +148,7 @@ def search_tasks(search_term, search_by="all"):
         """
         search_pattern = f"%{search_term}%"
         df = pd.read_sql_query(query, conn, params=[search_pattern, search_pattern, search_pattern])
+    # the user also has the option to search by topic, description or status
     elif search_by == "topic":
         query = "SELECT * FROM tasks WHERE topic LIKE ? ORDER BY score DESC, due ASC"
         search_pattern = f"%{search_term}%"
@@ -171,7 +172,6 @@ def get_completed_tasks_in_range(days_back):
     conn = sqlite3.connect('todo.db')
     
     # Calculate the cutoff date
-    from datetime import timedelta
     cutoff_date = datetime.now() - timedelta(days=days_back)
     
     query = """
