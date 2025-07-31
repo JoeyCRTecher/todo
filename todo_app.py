@@ -581,6 +581,54 @@ def search_tasks_page():
     else:
         st.success(f"Found {len(results)} task(s) matching your search.")
         
+        # Status filter controls (copied from View Tasks page)
+        st.markdown("### 🔍 Filter by Status")
+        col1, col2, col3, col4, col5 = st.columns(5)
+        
+        with col1:
+            show_pending = st.checkbox("Pending", value=True, key="search_filter_pending")
+        with col2:
+            show_in_progress = st.checkbox("In Progress", value=True, key="search_filter_in_progress")
+        with col3:
+            show_on_hold = st.checkbox("On Hold", value=True, key="search_filter_on_hold")
+        with col4:
+            show_completed = st.checkbox("Completed", value=False, key="search_filter_completed")
+        with col5:
+            show_expired = st.checkbox("Expired", value=False, key="search_filter_expired")
+        
+        # Filter search results based on selected statuses
+        selected_statuses = []
+        if show_pending:
+            selected_statuses.append("Pending")
+        if show_in_progress:
+            selected_statuses.append("In Progress")
+        if show_on_hold:
+            selected_statuses.append("On Hold")
+        if show_completed:
+            selected_statuses.append("Completed")
+        if show_expired:
+            selected_statuses.append("Expired")
+        
+        # Apply filter to search results
+        if selected_statuses:
+            filtered_results = results[results['status'].isin(selected_statuses)]
+        else:
+            filtered_results = results  # Show all if no filters selected
+        
+        st.markdown("---")
+        
+        # Update results to use filtered results
+        if len(filtered_results) == 0:
+            st.info("No tasks found matching the selected filters.")
+            return
+        
+        # Update the success message to reflect filtering
+        if len(filtered_results) != len(results):
+            st.info(f"Showing {len(filtered_results)} of {len(results)} search results after filtering.")
+        
+        # Use filtered_results instead of results for display
+        results = filtered_results
+        
         # Display search results with edit functionality
         for _, task in results.iterrows():
             status_color = get_status_color(task['status'])
