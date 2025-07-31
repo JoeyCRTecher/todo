@@ -7,10 +7,10 @@ import os
 def get_status_color(status):
     """Get the color for a given status."""
     status_colors = {
-        'Pending': 'orange',
-        'In Progress': 'green', 
+        'Pending': 'violet',
+        'In Progress': 'orange', 
         'On Hold': 'grey',
-        'Completed': 'orange',
+        'Completed': 'green',
         'Expired': 'red'
     }
     return status_colors.get(status, 'blue')  # default to blue if status not found
