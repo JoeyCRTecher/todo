@@ -190,18 +190,14 @@ init_database()
 
 # Main app
 def main():
-    
     # Search functionality with magnifying glass icon
     st.sidebar.markdown("### 🔍 Quick Search")
-    
     # Use a form to enable Enter key functionality
     with st.sidebar.form("search_form"):
         search_term = st.text_input("Search tasks", placeholder="Enter search term... (Press Enter to search)", key="quick_search")
         search_by = st.selectbox("Search by", ["all", "topic", "description", "status"], key="search_by")
-        
         # Form submit button (can be triggered by Enter key)
         search_submitted = st.form_submit_button("🔍 Search", use_container_width=True)
-    
     if search_submitted:
         if search_term and search_term.strip():
             # Store search parameters in session state with different keys
@@ -211,15 +207,12 @@ def main():
             st.rerun()
         else:
             st.sidebar.warning("Please enter a search term.")
-    
     st.sidebar.markdown("---")
-    
     # Sidebar for navigation
     page = st.sidebar.selectbox(
         "Choose an action:",
         ["View Tasks", "Done Today", "Add Task", "Edit Task", "Delete Task"]
     )
-    
     # Check if search is active
     if hasattr(st.session_state, 'show_search') and st.session_state.show_search:
         search_tasks_page()
