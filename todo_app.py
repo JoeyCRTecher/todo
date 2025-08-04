@@ -68,7 +68,7 @@ def check_and_update_expired_tasks():
         SET status = 'Expired', updated_at = CURRENT_TIMESTAMP
         WHERE created_at < ? 
         AND status NOT IN ('Expired', 'Completed')
-    ''', (cutoff_date,))
+    ''', (cutoff_date.isoformat(),))
     
     updated_count = cursor.rowcount
     conn.commit()
@@ -181,7 +181,7 @@ def get_completed_tasks_in_range(days_back):
     ORDER BY updated_at DESC, score DESC
     """
     
-    df = pd.read_sql_query(query, conn, params=[cutoff_date])
+    df = pd.read_sql_query(query, conn, params=[cutoff_date.isoformat()])
     conn.close()
     return df
 
