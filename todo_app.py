@@ -22,10 +22,40 @@ st.set_page_config(
     layout="wide"
 )
 
+def get_db_path(db_path: str | None = None) -> str:
+    """Resolve the database path in a configurable way.
+
+    Priority order:
+    1) Explicit db_path argument
+    2) Streamlit session state key 'DB_PATH'
+    3) Streamlit secrets key 'DB_PATH'
+    4) Environment variable TODO_DB_PATH
+    5) Fallback: 'todo.db'
+    """
+    if db_path:
+        return str(db_path)
+    # Try streamlit runtime configuration if available
+    try:
+        if hasattr(st, "session_state") and "DB_PATH" in st.session_state:
+            return str(st.session_state["DB_PATH"])  # type: ignore[index]
+        # st.secrets behaves like a mapping; guard in try to avoid issues in tests
+        if getattr(st, "secrets", None) and "DB_PATH" in st.secrets:
+            return str(st.secrets["DB_PATH"])  # type: ignore[index]
+    except Exception:
+        # In non-Streamlit contexts or if secrets aren't available
+        pass
+    return os.environ.get("TODO_DB_PATH", "todo.db")
+
+
+def connect_to_db(db_path: str | None = None) -> sqlite3.Connection:
+    """Create and return a SQLite connection using the resolved DB path."""
+    return sqlite3.connect(get_db_path(db_path))
+
+
 # Database setup
 def init_database():
     """Initialize the SQLite database and create the tasks table if it doesn't exist."""
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -55,7 +85,7 @@ def calculate_score(impact, tractability, uncertainty):
 
 def check_and_update_expired_tasks():
     """Check for tasks older than 90 days and mark them as expired."""
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     cursor = conn.cursor()
     
     # Calculate the date 90 days ago
@@ -78,7 +108,7 @@ def check_and_update_expired_tasks():
 
 def get_all_tasks():
     """Retrieve all tasks from the database."""
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     query = "SELECT * FROM tasks ORDER BY score DESC, due ASC"
     df = pd.read_sql_query(query, conn)
     conn.close()
@@ -88,7 +118,7 @@ def add_task(topic, description, due, status, impact, tractability, uncertainty)
     """Add a new task to the database."""
     score = calculate_score(impact, tractability, uncertainty)
     
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -103,7 +133,7 @@ def update_task(task_id, topic, description, due, status, impact, tractability, 
     """Update an existing task in the database."""
     score = calculate_score(impact, tractability, uncertainty)
     
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     cursor = conn.cursor()
     
     cursor.execute('''
@@ -117,7 +147,7 @@ def update_task(task_id, topic, description, due, status, impact, tractability, 
 
 def delete_task(task_id):
     """Delete a task from the database."""
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     cursor = conn.cursor()
     
     cursor.execute('DELETE FROM tasks WHERE id=?', (task_id,))
@@ -127,7 +157,7 @@ def delete_task(task_id):
 
 def get_task_by_id(task_id):
     """Get a specific task by ID."""
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     cursor = conn.cursor()
     
     cursor.execute('SELECT * FROM tasks WHERE id=?', (task_id,))
@@ -138,7 +168,7 @@ def get_task_by_id(task_id):
 
 def search_tasks(search_term, search_by="all"):
     """Search tasks by topic, description, or status."""
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     #the default behaviour
     if search_by == "all":
         query = """
@@ -169,7 +199,7 @@ def search_tasks(search_term, search_by="all"):
 
 def get_completed_tasks_in_range(days_back):
     """Get completed tasks within the last X days."""
-    conn = sqlite3.connect('todo.db')
+    conn = connect_to_db()
     
     # Calculate the cutoff date
     cutoff_date = datetime.now() - timedelta(days=days_back)
