@@ -92,6 +92,15 @@ def check_and_update_expired_tasks():
     from datetime import timedelta
     cutoff_date = datetime.now() - timedelta(days=90)
     
+    # First, get the tasks that will be expired to return their details
+    cursor.execute('''
+        SELECT id, topic FROM tasks
+        WHERE created_at < ? 
+        AND status NOT IN ('Expired', 'Completed')
+    ''', (cutoff_date.isoformat(),))
+    
+    expired_tasks = cursor.fetchall()
+    
     # Update tasks that are older than 90 days and not already expired or completed
     cursor.execute('''
         UPDATE tasks 
@@ -104,7 +113,7 @@ def check_and_update_expired_tasks():
     conn.commit()
     conn.close()
     
-    return updated_count
+    return updated_count, expired_tasks
 
 def get_all_tasks():
     """Retrieve all tasks from the database."""
@@ -281,9 +290,18 @@ def view_tasks_page():
     st.header("📋 Current Tasks")
     
     # Check for expired tasks
-    expired_count = check_and_update_expired_tasks()
+    expired_count, expired_tasks = check_and_update_expired_tasks()
     if expired_count > 0:
-        st.info(f"📅 {expired_count} task(s) have been automatically marked as expired (older than 90 days).")
+        # Create a message with clickable links to expired tasks
+        message = f"📅 {expired_count} task(s) have been automatically marked as expired (older than 90 days):"
+        
+        # Add clickable links for each expired task
+        for task_id, task_topic in expired_tasks:
+            if st.button(f"📋 {task_topic}", key=f"expired_task_{task_id}", help=f"Click to edit task ID {task_id}"):
+                st.session_state.edit_task_id = task_id
+                st.rerun()
+        
+        st.info(message)
     
     # Quick add task field
     st.markdown("### ➕ Quick Add Task")
