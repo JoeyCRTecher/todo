@@ -1,24 +1,35 @@
-# Todo
-Filter out old tasks
-Add tags
-
-
 # Todo List Manager
 
-A modern, feature-rich todo list application built with Python 3.13, Streamlit, and SQLite3. This application helps you manage tasks with priority scoring based on impact, tractability, and uncertainty.
+A modern, feature-rich todo list application built with Python 3.13, Streamlit, and SQLite3. This application helps you manage tasks with intelligent priority scoring based on impact, tractability, and uncertainty factors.
 
-## Features
+## ✨ Key Features
 
-- ✅ **Add Tasks**: Create new tasks with all required fields
-- ✏️ **Edit Tasks**: Modify existing tasks
-- 🗑️ **Delete Tasks**: Remove tasks from your list
-- 🔍 **Search Tasks**: Search tasks by topic, description, or status
-- 📊 **Priority Scoring**: Automatic score calculation based on impact, tractability, and uncertainty
-- 📅 **Due Date Management**: Set and track due dates
-- 📈 **Statistics Dashboard**: View task statistics and progress
-- 🔄 **Status Tracking**: Track task status (Pending, In Progress, Completed, On Hold, Expired)
+### Core Task Management
+- ✅ **Add Tasks**: Create new tasks with comprehensive details
+- ✏️ **Inline Editing**: Edit tasks directly from any view with expandable forms
+- 🗑️ **Delete Tasks**: Remove tasks with confirmation dialogs
+- 🔍 **Advanced Search**: Multi-field search with real-time filtering
+- ⚡ **Quick Add**: Instantly add tasks from the main view and navigate to full form
+
+### Smart Organization
+- 📊 **Priority Scoring**: Automatic score calculation using (Impact × Tractability) ÷ Uncertainty
+- 📅 **Due Date Management**: Set and track due dates with visual indicators
+- 🔄 **Status Tracking**: Full lifecycle management (Pending, In Progress, Completed, On Hold, Expired)
+- 🎯 **Status Filtering**: Toggle visibility of different task statuses with checkboxes
+- 📈 **Statistics Dashboard**: Real-time metrics and progress tracking
+
+### Intelligent Automation
 - ⏰ **Automatic Expiration**: Tasks older than 90 days are automatically marked as expired
-- 🔍 **Expired Task Filtering**: Toggle visibility of expired tasks (hidden by default)
+- � **Expired Task Links**: Clickable links in expiration notifications for direct editing
+- 🔍 **Smart Defaults**: Intelligent form defaults and session state management
+- 💾 **Configurable Database**: Environment-aware database path resolution
+
+### Enhanced User Experience
+- 🚀 **Session Management**: Persistent UI state across interactions
+- 📱 **Responsive Design**: Wide layout optimized for productivity
+- 🎨 **Color-Coded Status**: Visual status indicators with distinct colors
+- ⚡ **Quick Navigation**: Seamless transitions between views and actions
+- 📋 **Done Today View**: Dedicated view for recently completed tasks with date range selection
 
 ## Task Fields
 
@@ -52,50 +63,74 @@ Each task includes the following fields:
 
 4. **Open your browser** and navigate to the URL shown in the terminal (usually `http://localhost:8501`)
 
-## Usage
+## 🚀 Usage Guide
 
-### Viewing Tasks
-- Navigate to "View Tasks" in the sidebar
-- Tasks are displayed in expandable sections, sorted by score and due date
-- Use the status filters to show/hide different task statuses (including expired tasks)
-- View summary statistics at the bottom
+### Main Dashboard (View Tasks)
+The primary interface provides comprehensive task management:
+
+- **Task Display**: Expandable cards showing tasks sorted by priority score and due date
+- **Status Filtering**: Use checkboxes to show/hide specific task statuses (Pending, In Progress, On Hold, Completed, Expired)
+- **Quick Add**: Enter a task name in the quick add field and press Enter to navigate to the full add form
+- **Inline Editing**: Each task expander includes a full edit form for immediate updates
+- **Statistics**: Real-time metrics showing task counts, averages, and completion rates
+- **Expired Task Notifications**: When tasks auto-expire, clickable links allow direct navigation to edit them
+
+### Quick Search (Sidebar)
+Powerful search functionality accessible from any view:
+
+1. Enter search terms in the sidebar search field
+2. Select search scope:
+   - **All**: Search across topic, description, and status
+   - **Topic**: Search only task titles
+   - **Description**: Search only task descriptions  
+   - **Status**: Search only task statuses
+3. Press Enter or click Search to view results
+4. Apply additional status filters to search results
+5. Edit tasks directly from search results with inline forms
 
 ### Adding Tasks
-1. Go to "Add Task" in the sidebar
-2. Fill in the required fields:
-   - **Topic** (required): Enter the task name
-   - **Description**: Add detailed description
-   - **Due Date**: Set when the task is due
-   - **Status**: Choose current status
-   - **Impact**: Rate importance (1-10)
-   - **Tractability**: Rate ease of completion (1-10)
-   - **Uncertainty**: Rate uncertainty level (1-10)
-3. The score will be calculated automatically
+**Method 1 - Quick Add:**
+1. Type task name in the "Quick Add Task" field on main view
+2. Press Enter to navigate to full form with pre-filled name
+
+**Method 2 - Full Form:**
+1. Select "Add Task" from sidebar navigation
+2. Fill in all fields:
+   - **Topic** (required): Task name/title
+   - **Description**: Detailed task description
+   - **Due Date**: Optional due date
+   - **Status**: Initial status (defaults to Pending)
+   - **Impact**: Importance rating (1-10, affects priority score)
+   - **Tractability**: Ease of completion (1-10, affects priority score)
+   - **Uncertainty**: Risk/uncertainty level (1-10, affects priority score)
+3. Review calculated priority score
 4. Click "Add Task" to save
 
 ### Editing Tasks
-1. Go to "Edit Task" in the sidebar
-2. Select the task you want to edit from the dropdown
-3. Modify any fields as needed
-4. Click "Update Task" to save changes
+**Method 1 - Inline Editing (Recommended):**
+- Expand any task card from View Tasks or Search Results
+- Use the built-in edit form within the expander
+- Make changes and click "Update Task"
+
+**Method 2 - Dedicated Edit Page:**
+- Select "Edit Task" from sidebar
+- Choose task from dropdown or use direct navigation from expired task links
+- Modify fields and save changes
+
+### Done Today View
+Track your recent accomplishments:
+
+- Use the slider to select date range (1-31 days back)
+- View all tasks completed within the selected timeframe
+- See completion timestamps and task details
+- Review completion statistics and insights
+- Identify high-impact and high-scoring completed tasks
 
 ### Deleting Tasks
-1. Go to "Delete Task" in the sidebar
-2. Select the task you want to delete
-3. Review the task details
-4. Click "Delete Task" to confirm
-
-### Searching Tasks
-1. Use the **🔍 Quick Search** section in the sidebar
-2. Enter your search term in the text field
-3. Choose what to search by:
-   - **All**: Search in topic, description, and status
-   - **Topic**: Search only in task topics
-   - **Description**: Search only in task descriptions
-   - **Status**: Search only in task status
-4. Click the **🔍 Search** button to find matching tasks
-5. View search results with statistics
-6. Click "← Back to Tasks" to return to the main interface
+1. Navigate to "Delete Task" in sidebar
+2. Select task from dropdown menu
+3. Review task details in confirmation view
+4. Click "🗑️ Delete Task" to permanently remove
 
 ## Priority Scoring System
 
@@ -108,21 +143,56 @@ The application uses a sophisticated scoring system to help prioritize tasks:
 
 This scoring system helps you focus on tasks that are both important and achievable.
 
-## Automatic Task Expiration
+## 🤖 Intelligent Task Management
 
-The application automatically manages task expiration to help you keep your task list current:
+### Automatic Expiration System
+The app includes sophisticated automatic task lifecycle management:
 
-- **90-Day Rule**: Tasks that are older than 90 days are automatically marked as "Expired"
-- **Smart Updates**: Only tasks that are not already "Completed" or "Expired" are affected
-- **Visual Feedback**: You'll see a notification when tasks are automatically expired
-- **Filter Control**: Expired tasks are hidden by default but can be shown using the filter toggle
-- **Manual Override**: You can manually change a task's status back from "Expired" if needed
+- **90-Day Auto-Expiration**: Tasks older than 90 days are automatically marked as "Expired"
+- **Smart Filtering**: Only affects tasks that aren't already "Completed" or "Expired"
+- **Interactive Notifications**: When tasks expire, you'll see a banner with clickable task links
+- **Direct Navigation**: Click any expired task link to jump directly to its edit form
+- **Status Control**: Expired tasks are hidden by default but can be toggled visible
+- **Manual Override**: Easily change status back from "Expired" if tasks become relevant again
 
-This feature helps you maintain a clean, current task list by automatically identifying tasks that may no longer be relevant.
+### Configurable Database Connection
+Enterprise-ready database configuration with multiple fallback options:
 
-## Database
+1. **Explicit Path**: Pass database path directly to connection functions
+2. **Session State**: Use `st.session_state["DB_PATH"]` for runtime configuration  
+3. **Streamlit Secrets**: Configure via `st.secrets["DB_PATH"]` for deployment
+4. **Environment Variable**: Set `TODO_DB_PATH` environment variable
+5. **Default Fallback**: Uses `todo.db` in current directory
 
-The application uses SQLite3 for data storage. The database file (`todo.db`) will be created automatically when you first run the application. All data is stored locally on your machine.
+This flexible system supports development, testing, and production deployments.
+
+## 💾 Database Architecture
+
+The application uses SQLite3 with intelligent path resolution and automatic schema management:
+
+- **Auto-Creation**: Database and tables are created automatically on first run
+- **Local Storage**: All data stored locally on your machine for privacy and performance
+- **Configurable Location**: Database path can be customized via multiple configuration methods
+- **Schema Management**: Automatic table creation with proper constraints and indexes
+- **Transaction Safety**: All database operations use proper transaction handling
+- **Connection Pooling**: Centralized connection management through `connect_to_db()` function
+
+### Database Schema
+```sql
+CREATE TABLE tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    topic TEXT NOT NULL,
+    description TEXT,
+    due DATE,
+    status TEXT DEFAULT 'Pending',
+    impact INTEGER DEFAULT 1,
+    tractability INTEGER DEFAULT 1, 
+    uncertainty INTEGER DEFAULT 1,
+    score REAL DEFAULT 0.0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
 
 ## Requirements
 
@@ -130,22 +200,29 @@ The application uses SQLite3 for data storage. The database file (`todo.db`) wil
 - Streamlit 1.28.1+
 - Pandas 2.1.3+
 
-## File Structure
+## 📁 Project Structure
 
 ```
 todo/
-├── todo_app.py          # Main application file
-├── requirements.txt     # Python dependencies
-├── README.md           # This file
-├── todo.db             # SQLite database (created automatically)
-├── pytest.ini          # Pytest configuration
-├── run_tests.py        # Test runner script
-└── tests/              # Test directory
-    ├── __init__.py     # Makes tests a Python package
-    ├── conftest.py     # Pytest fixtures and configuration
-    ├── test_integration.py  # Integration tests
-    ├── test_database.py     # Database tests
-    └── test_calculations.py # Business logic tests
+├── todo_app.py              # Main Streamlit application
+├── requirements.txt         # Python dependencies
+├── README.md               # Documentation (this file)
+├── todo.db                 # SQLite database (auto-created)
+├── run_app.bat             # Windows batch file to run app
+├── pytest.ini             # Pytest configuration
+├── run_tests.py            # Comprehensive test runner
+├── test_colors.py          # Color utility tests
+├── .github/
+│   └── copilot-instructions.md  # GitHub Copilot configuration
+├── tests/                  # Comprehensive test suite
+│   ├── __init__.py         # Python package marker
+│   ├── conftest.py         # Pytest fixtures and test database setup
+│   ├── test_integration.py # End-to-end workflow tests
+│   ├── test_database.py    # Database operations and integrity tests
+│   └── test_calculations.py # Business logic and scoring tests
+└── tmp/                    # Temporary files and development notes
+    ├── blocked_tasks.md    # Development task tracking
+    └── fixing_tests.md     # Test development notes
 ```
 
 ## Testing
