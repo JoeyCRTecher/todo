@@ -115,10 +115,24 @@ def check_and_update_expired_tasks():
     
     return updated_count, expired_tasks
 
-def get_all_tasks():
-    """Retrieve all tasks from the database."""
+def get_all_tasks(sort_by="score"):
+    """Retrieve all tasks from the database with optional sorting.
+
+    Args:
+        sort_by: Sorting method - "score", "due_date", "created", or "updated"
+    """
     conn = connect_to_db()
-    query = "SELECT * FROM tasks ORDER BY score DESC, due ASC"
+
+    # Define sort clauses
+    sort_clauses = {
+        "score": "score DESC, due ASC",
+        "due_date": "due ASC, score DESC",
+        "created": "created_at DESC",
+        "updated": "updated_at DESC"
+    }
+
+    order_by = sort_clauses.get(sort_by, "score DESC, due ASC")
+    query = f"SELECT * FROM tasks ORDER BY {order_by}"
     df = pd.read_sql_query(query, conn)
     conn.close()
     return df
@@ -175,34 +189,50 @@ def get_task_by_id(task_id):
     conn.close()
     return task
 
-def search_tasks(search_term, search_by="all"):
-    """Search tasks by topic, description, or status."""
+def search_tasks(search_term, search_by="all", sort_by="score"):
+    """Search tasks by topic, description, or status with optional sorting.
+
+    Args:
+        search_term: The term to search for
+        search_by: Where to search - "all", "topic", "description", or "status"
+        sort_by: Sorting method - "score", "due_date", "created", or "updated"
+    """
     conn = connect_to_db()
+
+    # Define sort clauses
+    sort_clauses = {
+        "score": "score DESC, due ASC",
+        "due_date": "due ASC, score DESC",
+        "created": "created_at DESC",
+        "updated": "updated_at DESC"
+    }
+    order_by = sort_clauses.get(sort_by, "score DESC, due ASC")
+
     #the default behaviour
     if search_by == "all":
-        query = """
-        SELECT * FROM tasks 
+        query = f"""
+        SELECT * FROM tasks
         WHERE topic LIKE ? OR description LIKE ? OR status LIKE ?
-        ORDER BY score DESC, due ASC
+        ORDER BY {order_by}
         """
         search_pattern = f"%{search_term}%"
         df = pd.read_sql_query(query, conn, params=[search_pattern, search_pattern, search_pattern])
     # the user also has the option to search by topic, description or status
     elif search_by == "topic":
-        query = "SELECT * FROM tasks WHERE topic LIKE ? ORDER BY score DESC, due ASC"
+        query = f"SELECT * FROM tasks WHERE topic LIKE ? ORDER BY {order_by}"
         search_pattern = f"%{search_term}%"
         df = pd.read_sql_query(query, conn, params=[search_pattern])
     elif search_by == "description":
-        query = "SELECT * FROM tasks WHERE description LIKE ? ORDER BY score DESC, due ASC"
+        query = f"SELECT * FROM tasks WHERE description LIKE ? ORDER BY {order_by}"
         search_pattern = f"%{search_term}%"
         df = pd.read_sql_query(query, conn, params=[search_pattern])
     elif search_by == "status":
-        query = "SELECT * FROM tasks WHERE status LIKE ? ORDER BY score DESC, due ASC"
+        query = f"SELECT * FROM tasks WHERE status LIKE ? ORDER BY {order_by}"
         search_pattern = f"%{search_term}%"
         df = pd.read_sql_query(query, conn, params=[search_pattern])
     else:
         df = pd.DataFrame()
-    
+
     conn.close()
     return df
 
@@ -316,14 +346,28 @@ def view_tasks_page():
             st.rerun()
     
     st.markdown("---")
-    
-    # Get all tasks
-    df = get_all_tasks()
-    
+
+    # Sort control
+    st.markdown("### 📊 Sort By")
+    sort_option = st.selectbox(
+        "Choose sorting method",
+        options=["score", "due_date", "created", "updated"],
+        format_func=lambda x: {
+            "score": "Score (Highest First)",
+            "due_date": "Due Date (Earliest First)",
+            "created": "Created Date (Newest First)",
+            "updated": "Last Updated (Most Recent First)"
+        }[x],
+        key="view_tasks_sort"
+    )
+
+    # Get all tasks with selected sorting
+    df = get_all_tasks(sort_by=sort_option)
+
     if len(df) == 0:
         st.info("No tasks found. Add some tasks to get started!")
         return
-    
+
     # Status filter controls
     st.markdown("### 🔍 Filter by Status")
     col1, col2, col3, col4, col5 = st.columns(5)
@@ -613,15 +657,29 @@ def search_tasks_page():
     
     # Display search criteria
     st.info(f"Searching for: **{search_term}** in **{search_by}**")
-    
-    # Perform search
-    results = search_tasks(search_term, search_by)
-    
+
+    # Sort control
+    st.markdown("### 📊 Sort By")
+    sort_option = st.selectbox(
+        "Choose sorting method",
+        options=["score", "due_date", "created", "updated"],
+        format_func=lambda x: {
+            "score": "Score (Highest First)",
+            "due_date": "Due Date (Earliest First)",
+            "created": "Created Date (Newest First)",
+            "updated": "Last Updated (Most Recent First)"
+        }[x],
+        key="search_results_sort"
+    )
+
+    # Perform search with selected sorting
+    results = search_tasks(search_term, search_by, sort_by=sort_option)
+
     if len(results) == 0:
         st.info("No tasks found matching the search criteria.")
     else:
         st.success(f"Found {len(results)} task(s) matching your search.")
-        
+
         # Status filter controls (copied from View Tasks page)
         st.markdown("### 🔍 Filter by Status")
         col1, col2, col3, col4, col5 = st.columns(5)
