@@ -713,8 +713,13 @@ def search_tasks_page():
             filtered_results = results[results['status'].isin(selected_statuses)]
         else:
             filtered_results = results  # Show all if no filters selected
-        
+
         st.markdown("---")
+
+        # Back to Tasks button at top of results
+        if st.button("← Back to Tasks", key="back_button_top"):
+            st.session_state.show_search = False
+            st.rerun()
         
         # Update results to use filtered results
         if len(filtered_results) == 0:
